@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>鹅腿杀 · 你的鹅圈段位</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;overscroll-behavior:none}
+  body{
+    background:#FFF8E7;
+    background-image:
+      radial-gradient(circle at 12% 18%, #FFB627 2px, transparent 3px),
+      radial-gradient(circle at 78% 22%, #FF4D4D 2px, transparent 3px),
+      radial-gradient(circle at 25% 75%, #7CB518 2px, transparent 3px),
+      radial-gradient(circle at 88% 88%, #FFB627 2px, transparent 3px);
+    background-size:120px 120px,160px 160px,140px 140px,180px 180px;
+    color:#1A1A1A;
+    min-height:100vh;
+    position:relative;
+    overflow-x:hidden;
+  }
+  .stage{
+    max-width:430px;
+    margin:0 auto;
+    min-height:100vh;
+    padding:28px 22px 32px;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* 漂浮装饰 */
+  .deco{position:absolute;font-size:42px;z-index:0;pointer-events:none;animation:float 3s ease-in-out infinite}
+  .d1{top:50px;left:18px;transform:rotate(-15deg)}
+  .d2{top:80px;right:14px;transform:rotate(20deg);animation-delay:.5s}
+  .d3{top:280px;left:0;font-size:32px;transform:rotate(-25deg);animation-delay:1s}
+  .d4{top:320px;right:8px;font-size:36px;transform:rotate(15deg);animation-delay:1.5s}
+  @keyframes float{
+    0%,100%{transform:translateY(0) rotate(var(--r,0))}
+    50%{transform:translateY(-10px) rotate(var(--r,0))}
+  }
+
+  /* 顶部小贴纸 */
+  .top-tag{
+    align-self:center;
+    background:#1A1A1A;
+    color:#FFB627;
+    font-weight:900;
+    font-size:12px;
+    padding:6px 14px;
+    border-radius:20px;
+    letter-spacing:2px;
+    box-shadow:3px 3px 0 #FF4D4D;
+  }
+
+  /* 段位卡 */
+  .rank-card{
+    margin-top:24px;
+    background:#fff;
+    border:4px solid #1A1A1A;
+    border-radius:24px;
+    padding:32px 24px 28px;
+    text-align:center;
+    box-shadow:8px 8px 0 #1A1A1A;
+    position:relative;
+    z-index:1;
+  }
+  .rank-emoji{
+    font-size:96px;
+    line-height:1;
+    display:inline-block;
+    animation:wiggle 2s ease-in-out infinite;
+  }
+  @keyframes wiggle{
+    0%,100%{transform:rotate(-6deg)}
+    50%{transform:rotate(6deg)}
+  }
+  .rank-title{
+    margin-top:14px;
+    font-size:36px;
+    font-weight:900;
+    letter-spacing:1px;
+    color:#1A1A1A;
+    text-shadow:3px 3px 0 #FFB627;
+    display:inline-block;
+    transform:rotate(-1.5deg);
+  }
+  .rank-desc{
+    margin-top:18px;
+    font-size:14px;
+    color:#666;
+    font-weight:700;
+    line-height:1.6;
+    padding:0 8px;
+  }
+
+  /* 分数环 */
+  .score-block{
+    margin-top:22px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:18px;
+  }
+  .score-circle{
+    width:110px;
+    height:110px;
+    border-radius:50%;
+    background:#FFB627;
+    border:4px solid #1A1A1A;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    box-shadow:4px 4px 0 #1A1A1A;
+    transform:rotate(-4deg);
+  }
+  .score-num{
+    font-size:42px;
+    font-weight:900;
+    line-height:1;
+    color:#1A1A1A;
+  }
+  .score-unit{
+    font-size:12px;
+    font-weight:800;
+    margin-top:4px;
+    letter-spacing:1px;
+  }
+  .score-meta{flex:1;text-align:left}
+  .meta-line{
+    font-size:13px;
+    font-weight:700;
+    color:#1A1A1A;
+    margin-bottom:6px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .meta-line .dot{
+    display:inline-block;
+    width:8px;height:8px;
+    border-radius:50%;
+    background:#FF4D4D;
+  }
+  .meta-line b{color:#FF4D4D;font-size:15px}
+
+  /* 数据三件套 */
+  .stats{
+    margin-top:22px;
+    display:flex;
+    gap:10px;
+  }
+  .stat{
+    flex:1;
+    background:#fff;
+    border:3px solid #1A1A1A;
+    border-radius:14px;
+    padding:14px 8px;
+    text-align:center;
+    box-shadow:3px 3px 0 #1A1A1A;
+  }
+  .stat:nth-child(1){background:#7CB518;color:#fff;transform:rotate(-2deg)}
+  .stat:nth-child(2){background:#FF4D4D;color:#fff;transform:rotate(1.5deg)}
+  .stat:nth-child(3){background:#FFB627;transform:rotate(-1deg)}
+  .stat-num{font-size:22px;font-weight:900;line-height:1}
+  .stat-label{font-size:11px;font-weight:700;margin-top:6px}
+
+  /* 名言贴纸 */
+  .quote{
+    margin-top:22px;
+    background:#1A1A1A;
+    color:#FFF8E7;
+    border-radius:16px;
+    padding:16px 18px;
+    position:relative;
+    transform:rotate(-1deg);
+    box-shadow:5px 5px 0 #FFB627;
+  }
+  .quote::before{
+    content:"📢";
+    position:absolute;
+    top:-14px;
+    left:14px;
+    font-size:28px;
+  }
+  .quote-text{
+    font-size:14px;
+    font-weight:700;
+    line-height:1.5;
+    padding-left:30px;
+  }
+
+  /* 按钮组 */
+  .btn-group{
+    margin-top:auto;
+    padding-top:24px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .btn{
+    border:none;
+    border-radius:50px;
+    padding:18px;
+    font-size:17px;
+    font-weight:900;
+    cursor:pointer;
+    transition:transform .15s, box-shadow .15s;
+    letter-spacing:1px;
+  }
+  .btn-share{
+    background:#FF4D4D;
+    color:#fff;
+    box-shadow:5px 5px 0 #1A1A1A;
+  }
+  .btn-share:active{transform:translate(3px,3px);box-shadow:2px 2px 0 #1A1A1A}
+  .btn-row{display:flex;gap:10px}
+  .btn-replay{
+    flex:1;
+    background:#1A1A1A;
+    color:#FFB627;
+    box-shadow:4px 4px 0 #FFB627;
+  }
+  .btn-home{
+    flex:1;
+    background:#fff;
+    color:#1A1A1A;
+    border:3px solid #1A1A1A;
+    box-shadow:4px 4px 0 #1A1A1A;
+  }
+  .btn-replay:active,.btn-home:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1A1A1A}
+
+  /* 撒花 */
+  .confetti{
+    position:fixed;
+    top:-20px;
+    width:10px;
+    height:14px;
+    z-index:200;
+    pointer-events:none;
+    animation:fall 3s linear forwards;
+  }
+  @keyframes fall{
+    to{transform:translateY(110vh) rotate(720deg);opacity:0}
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <span class="deco d1">🎉</span>
+  <span class="deco d2">🍗</span>
+  <span class="deco d3">⭐</span>
+  <span class="deco d4">💸</span>
+
+  <span class="top-tag">🏆 鹅圈段位鉴定结果</span>
+
+  <div class="rank-card">
+    <span class="rank-emoji" id="rankEmoji">🦢</span>
+    <div class="rank-title" id="rankTitle">鹅腿杀神</div>
+    <div class="rank-desc" id="rankDesc">恭喜你，鹅圈一哥就是你！</div>
+
+    <div class="score-block">
+      <div class="score-circle">
+        <div class="score-num" id="scoreNum">100</div>
+        <div class="score-unit">分</div>
+      </div>
+      <div class="score-meta">
+        <div class="meta-line"><span class="dot"></span>含鹅量：<b id="gooseRatio">120%</b></div>
+        <div class="meta-line"><span class="dot"></span>击败：<b id="beatRate">99%</b> 鹅圈玩家</div>
+        <div class="meta-line"><span class="dot"></span>段位：<b id="rankShort">王者</b></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-num" id="rightCnt">5</div>
+      <div class="stat-label">答对题数</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="wrongCnt">0</div>
+      <div class="stat-label">答错题数</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">15s</div>
+      <div class="stat-label">平均用时</div>
+    </div>
+  </div>
+
+  <div class="quote">
+    <div class="quote-text" id="quoteText">"鹅腿在手，天下我有。今晚的食堂，不香了。"</div>
+  </div>
+
+  <div class="btn-group">
+    <button class="btn btn-share" onclick="share()">📲 晒出我的鹅圈段位</button>
+    <div class="btn-row">
+      <button class="btn btn-replay" onclick="replay()">🔁 再杀一把</button>
+      <button class="btn btn-home" onclick="home()">🏠 返回首页</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 读取得分
+  let score = 0;
+  try{score = parseInt(localStorage.getItem('goose_score')||'0',10)}catch(e){}
+  if(isNaN(score)) score = 0;
+
+  const TOTAL = 5;
+  const PER = 20;
+  const right = Math.round(score/PER);
+  const wrong = TOTAL - right;
+
+  // 根据分数推段位
+  function getRank(s){
+    if(s>=100) return {
+      emoji:"👑", title:"鹅腿杀神",
+      desc:"5/5 全对！鹅圈的传说就是你，建议立刻去鹅腿阿姨摊位前接受加冕。",
+      ratio:"120%", beat:"99%", short:"王者",
+      quote:"\"鹅腿在手，天下我有。今晚的食堂，瞬间不香了。\""
+    };
+    if(s>=80) return {
+      emoji:"🔥", title:"鹅圈红人",
+      desc:"含鹅量爆表，朋友圈晒鹅腿绝对没人能盖你的风头。",
+      ratio:"95%", beat:"88%", short:"星耀",
+      quote:"\"少壮不努力，长大没鹅吃。还好你年轻有为。\""
+    };
+    if(s>=60) return {
+      emoji:"😎", title:"鹅道有缘人",
+      desc:"勉强算个鹅圈中产，再多排几次队你就能晋级了。",
+      ratio:"68%", beat:"65%", short:"钻石",
+      quote:"\"今天的鹅腿，明天的我。继续修行吧。\""
+    };
+    if(s>=40) return {
+      emoji:"🤔", title:"鹅圈萌新",
+      desc:"刚入鹅道，建议先去蹲三天点，背熟阿姨的出摊时刻表。",
+      ratio:"42%", beat:"38%", short:"黄金",
+      quote:"\"路漫漫其修远兮，吾将上下而抢鹅。\""
+    };
+    return {
+      emoji:"😅", title:"鹅腿门外汉",
+      desc:"你是不是连鹅腿阿姨长什么样都不知道？速去补课。",
+      ratio:"15%", beat:"12%", short:"青铜",
+      quote:"\"鹅腿一根千金难买，今天的你输得明明白白。\""
+    };
+  }
+
+  const r = getRank(score);
+  document.getElementById('rankEmoji').textContent = r.emoji;
+  document.getElementById('rankTitle').textContent = r.title;
+  document.getElementById('rankDesc').textContent = r.desc;
+  document.getElementById('scoreNum').textContent = score;
+  document.getElementById('gooseRatio').textContent = r.ratio;
+  document.getElementById('beatRate').textContent = r.beat;
+  document.getElementById('rankShort').textContent = r.short;
+  document.getElementById('rightCnt').textContent = right;
+  document.getElementById('wrongCnt').textContent = wrong;
+  document.getElementById('quoteText').textContent = r.quote;
+
+  // 撒花 (满分专属)
+  if(score>=80){
+    const colors = ['#FFB627','#FF4D4D','#7CB518','#1A1A1A'];
+    for(let i=0;i<40;i++){
+      setTimeout(()=>{
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.style.left = Math.random()*100 + 'vw';
+        c.style.background = colors[Math.floor(Math.random()*colors.length)];
+        c.style.animationDuration = (2 + Math.random()*2) + 's';
+        c.style.transform = 'rotate(' + Math.random()*360 + 'deg)';
+        document.body.appendChild(c);
+        setTimeout(()=>c.remove(),4000);
+      }, i*60);
+    }
+  }
+
+  function share(){
+    alert("📲 截图保存，发到朋友圈秀一波！\n\n#我的鹅圈段位# " + r.title + " · " + score + "分");
+  }
+  function replay(){
+    try{localStorage.removeItem('goose_score')}catch(e){}
+    location.href='quiz.html';
+  }
+  function home(){
+    try{localStorage.clear()}catch(e){}
+    location.href='index.html';
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>鹅腿杀 · 答题中</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;overscroll-behavior:none}
+  body{
+    background:#FFF8E7;
+    background-image:
+      radial-gradient(circle at 15% 15%, #FFB627 2px, transparent 3px),
+      radial-gradient(circle at 85% 75%, #FF4D4D 2px, transparent 3px);
+    background-size:140px 140px,160px 160px;
+    color:#1A1A1A;
+    min-height:100vh;
+  }
+  .stage{
+    max-width:430px;
+    margin:0 auto;
+    min-height:100vh;
+    padding:20px 20px 30px;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* 顶部状态栏 */
+  .header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .back-btn{
+    background:#fff;
+    border:3px solid #1A1A1A;
+    border-radius:50%;
+    width:44px;
+    height:44px;
+    font-size:18px;
+    font-weight:900;
+    cursor:pointer;
+    box-shadow:3px 3px 0 #1A1A1A;
+  }
+  .back-btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #1A1A1A}
+  .progress-wrap{flex:1}
+  .progress-text{
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    font-weight:900;
+    margin-bottom:6px;
+  }
+  .progress-text .now{color:#FF4D4D;font-size:14px}
+  .progress-bar{
+    height:14px;
+    background:#fff;
+    border:3px solid #1A1A1A;
+    border-radius:10px;
+    overflow:hidden;
+    position:relative;
+  }
+  .progress-fill{
+    height:100%;
+    background:repeating-linear-gradient(45deg,#FFB627 0,#FFB627 8px,#FF4D4D 8px,#FF4D4D 16px);
+    width:0%;
+    transition:width .35s ease;
+  }
+  .timer{
+    background:#1A1A1A;
+    color:#FFB627;
+    border-radius:50%;
+    width:48px;
+    height:48px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:900;
+    font-size:18px;
+    box-shadow:3px 3px 0 #FF4D4D;
+    position:relative;
+  }
+  .timer.warning{
+    background:#FF4D4D;
+    color:#fff;
+    animation:shake .3s infinite;
+  }
+  @keyframes shake{
+    0%,100%{transform:translate(0,0)}
+    25%{transform:translate(-2px,1px)}
+    75%{transform:translate(2px,-1px)}
+  }
+
+  /* 题号标签 */
+  .q-tag{
+    margin-top:28px;
+    align-self:flex-start;
+    background:#FF4D4D;
+    color:#fff;
+    padding:6px 14px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:900;
+    transform:rotate(-3deg);
+    letter-spacing:1px;
+    box-shadow:3px 3px 0 #1A1A1A;
+  }
+
+  /* 题目卡片 */
+  .question-card{
+    margin-top:16px;
+    background:#fff;
+    border:4px solid #1A1A1A;
+    border-radius:20px;
+    padding:24px 20px;
+    box-shadow:6px 6px 0 #1A1A1A;
+    position:relative;
+  }
+  .question-card::before{
+    content:"❓";
+    position:absolute;
+    top:-20px;
+    right:-12px;
+    font-size:40px;
+    transform:rotate(20deg);
+  }
+  .question-text{
+    font-size:22px;
+    font-weight:900;
+    line-height:1.4;
+    color:#1A1A1A;
+  }
+  .question-hint{
+    margin-top:10px;
+    font-size:12px;
+    color:#999;
+    font-weight:600;
+  }
+
+  /* 选项 */
+  .options{
+    margin-top:24px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    flex:1;
+  }
+  .option{
+    background:#fff;
+    border:3px solid #1A1A1A;
+    border-radius:16px;
+    padding:16px 18px;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    box-shadow:4px 4px 0 #1A1A1A;
+    transition:all .15s;
+    text-align:left;
+  }
+  .option:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1A1A1A}
+  .option-letter{
+    flex-shrink:0;
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    background:#FFB627;
+    border:2px solid #1A1A1A;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:900;
+    font-size:16px;
+  }
+  .option-text{flex:1;line-height:1.3}
+  .option.correct{
+    background:#7CB518;
+    color:#fff;
+    border-color:#1A1A1A;
+    animation:pop .4s;
+  }
+  .option.correct .option-letter{background:#fff;color:#7CB518}
+  .option.wrong{
+    background:#FF4D4D;
+    color:#fff;
+    animation:wrongShake .4s;
+  }
+  .option.wrong .option-letter{background:#fff;color:#FF4D4D}
+  .option.disabled{pointer-events:none;opacity:.55}
+  @keyframes pop{
+    0%{transform:scale(1)}
+    40%{transform:scale(1.05)}
+    100%{transform:scale(1)}
+  }
+  @keyframes wrongShake{
+    0%,100%{transform:translateX(0)}
+    25%{transform:translateX(-8px)}
+    75%{transform:translateX(8px)}
+  }
+
+  /* 反馈贴纸 */
+  .feedback{
+    position:fixed;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%) rotate(-8deg) scale(0);
+    background:#FFB627;
+    color:#1A1A1A;
+    padding:24px 40px;
+    border:4px solid #1A1A1A;
+    border-radius:20px;
+    font-size:42px;
+    font-weight:900;
+    box-shadow:8px 8px 0 #FF4D4D;
+    pointer-events:none;
+    z-index:99;
+    transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+    white-space:nowrap;
+  }
+  .feedback.show{transform:translate(-50%,-50%) rotate(-8deg) scale(1)}
+  .feedback.miss{background:#FF4D4D;color:#fff;box-shadow:8px 8px 0 #1A1A1A}
+
+  /* 下一题按钮 */
+  .next-btn{
+    margin-top:16px;
+    background:#1A1A1A;
+    color:#FFB627;
+    border:none;
+    border-radius:50px;
+    padding:18px;
+    font-size:18px;
+    font-weight:900;
+    cursor:pointer;
+    box-shadow:5px 5px 0 #FF4D4D;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s, transform .15s, box-shadow .15s;
+    letter-spacing:1px;
+  }
+  .next-btn.show{opacity:1;pointer-events:auto}
+  .next-btn:active{transform:translate(3px,3px);box-shadow:2px 2px 0 #FF4D4D}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="header">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div class="progress-wrap">
+      <div class="progress-text">
+        <span><span class="now" id="curNo">1</span> / 5 题</span>
+        <span id="scoreText">0 分</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
+    </div>
+    <div class="timer" id="timer">60</div>
+  </div>
+
+  <div class="q-tag" id="qTag">第 1 题 · 鹅圈入门</div>
+
+  <div class="question-card">
+    <div class="question-text" id="qText">题目加载中...</div>
+    <div class="question-hint">凭直觉选，别想太多 👀</div>
+  </div>
+
+  <div class="options" id="options"></div>
+
+  <button class="next-btn" id="nextBtn" onclick="next()">下一题 →</button>
+</div>
+
+<div class="feedback" id="feedback">答对啦 🎉</div>
+
+<script>
+  const QUESTIONS = [
+    {
+      tag:"第 1 题 · 鹅圈入门",
+      q:"鹅腿阿姨最早是在哪所高校爆火出圈的？",
+      opts:["北京大学","清华大学","中国人民大学","北京航空航天大学"],
+      ans:2
+    },
+    {
+      tag:"第 2 题 · 行业黑话",
+      q:"在鹅圈，「含鹅量」指的是？",
+      opts:["你吃过的鹅腿数量","你抢鹅腿的成功率","你被鹅腿支配的程度","你和鹅腿阿姨的微信好友数"],
+      ans:2
+    },
+    {
+      tag:"第 3 题 · 实战操作",
+      q:"抢到鹅腿之后最骚的操作是？",
+      opts:["立刻发朋友圈炫耀","加价 50% 转手给舍友","小心翼翼独自含泪吃完","组局开「鹅腿品鉴会」"],
+      ans:3
+    },
+    {
+      tag:"第 4 题 · 灵魂拷问",
+      q:"没抢到鹅腿，正确的反应是？",
+      opts:["破防大哭","怒发冲冠骂三天","坦然接受去吃食堂","去隔壁学校蹲点"],
+      ans:3
+    },
+    {
+      tag:"第 5 题 · 终极封神",
+      q:"鹅圈一哥的精神图腾是？",
+      opts:["金黄油亮的脆皮","深夜排队的人潮","阿姨的招牌微笑","以上全都是 + 一根孜然"],
+      ans:3
+    }
+  ];
+
+  let idx = 0;
+  let score = 0;
+  let locked = false;
+  let timerId = null;
+  let timeLeft = 60;
+  const PER_SCORE = 20;
+
+  function goBack(){
+    if(confirm("退出后进度会清空，确定吗？")){
+      try{localStorage.clear()}catch(e){}
+      location.href='index.html';
+    }
+  }
+
+  function render(){
+    const q = QUESTIONS[idx];
+    document.getElementById('curNo').textContent = idx+1;
+    document.getElementById('qTag').textContent = q.tag;
+    document.getElementById('qText').textContent = q.q;
+    document.getElementById('scoreText').textContent = score + ' 分';
+    document.getElementById('progFill').style.width = ((idx)/QUESTIONS.length*100) + '%';
+    const box = document.getElementById('options');
+    box.innerHTML = '';
+    const letters = ['A','B','C','D'];
+    q.opts.forEach((opt,i)=>{
+      const btn = document.createElement('button');
+      btn.className='option';
+      btn.innerHTML = `<span class="option-letter">${letters[i]}</span><span class="option-text">${opt}</span>`;
+      btn.onclick = ()=>pick(i,btn);
+      box.appendChild(btn);
+    });
+    document.getElementById('nextBtn').classList.remove('show');
+    locked = false;
+    startTimer();
+  }
+
+  function startTimer(){
+    clearInterval(timerId);
+    timeLeft = 60;
+    const t = document.getElementById('timer');
+    t.textContent = timeLeft;
+    t.classList.remove('warning');
+    timerId = setInterval(()=>{
+      timeLeft--;
+      t.textContent = timeLeft;
+      if(timeLeft<=10) t.classList.add('warning');
+      if(timeLeft<=0){
+        clearInterval(timerId);
+        timeUp();
+      }
+    },1000);
+  }
+
+  function timeUp(){
+    if(locked) return;
+    locked = true;
+    const q = QUESTIONS[idx];
+    const opts = document.querySelectorAll('.option');
+    opts.forEach((o,i)=>{
+      o.classList.add('disabled');
+      if(i===q.ans) o.classList.add('correct');
+    });
+    showFeedback('超时啦 ⏰',true);
+    document.getElementById('nextBtn').classList.add('show');
+  }
+
+  function pick(i,btn){
+    if(locked) return;
+    locked = true;
+    clearInterval(timerId);
+    const q = QUESTIONS[idx];
+    const opts = document.querySelectorAll('.option');
+    opts.forEach(o=>o.classList.add('disabled'));
+    if(i===q.ans){
+      btn.classList.add('correct');
+      score += PER_SCORE;
+      showFeedback('答对啦 🎉',false);
+    }else{
+      btn.classList.add('wrong');
+      opts[q.ans].classList.add('correct');
+      showFeedback('答错咯 💥',true);
+    }
+    document.getElementById('scoreText').textContent = score + ' 分';
+    document.getElementById('nextBtn').classList.add('show');
+  }
+
+  function showFeedback(text,miss){
+    const fb = document.getElementById('feedback');
+    fb.textContent = text;
+    fb.classList.toggle('miss',miss);
+    fb.classList.add('show');
+    setTimeout(()=>fb.classList.remove('show'),900);
+  }
+
+  function next(){
+    idx++;
+    if(idx>=QUESTIONS.length){
+      try{localStorage.setItem('goose_score',score)}catch(e){}
+      location.href='result.html';
+      return;
+    }
+    render();
+  }
+
+  render();
+</script>
+</body>
+</html>
