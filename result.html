@@ -245,6 +245,64 @@
   @keyframes fall{
     to{transform:translateY(110vh) rotate(720deg);opacity:0}
   }
+
+  /* ====== 分享海报样式 ====== */
+  .poster-overlay{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;
+    align-items:center;justify-content:center;padding:20px;
+  }
+  .poster-overlay.show{display:flex}
+  .poster-wrap{
+    position:relative;width:360px;border-radius:16px;overflow:hidden;
+    box-shadow:0 8px 40px rgba(0,0,0,.4);animation:posterIn .35s ease;
+  }
+  @keyframes posterIn{
+    from{transform:scale(.85);opacity:0}
+    to{transform:scale(1);opacity:1}
+  }
+  .poster-canvas{display:block;width:100%;height:auto}
+  .poster-tip{
+    margin-top:16px;text-align:center;color:#fff;font-size:14px;
+    font-weight:700;letter-spacing:1px;text-shadow:0 1px 4px rgba(0,0,0,.5);
+  }
+  .poster-close{
+    position:absolute;top:-12px;right:-12px;width:36px;height:36px;
+    border-radius:50%;background:#fff;border:3px solid #1A1A1A;
+    font-size:18px;font-weight:900;display:flex;align-items:center;
+    justify-content:center;cursor:pointer;z-index:10;box-shadow:2px 2px 0 #1A1A1A;
+  }
+  .poster-close:active{transform:scale(.92)}
+  .poster-actions{
+    margin-top:14px;display:flex;gap:10px;justify-content:center;
+  }
+  .poster-actions button{
+    border:none;border-radius:30px;padding:10px 24px;font-size:14px;
+    font-weight:900;cursor:pointer;letter-spacing:1px;
+  }
+  .btn-dl{
+    background:#7CB518;color:#fff;box-shadow:3px 3px 0 #1A1A1A;
+  }
+  .btn-dl:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #1A1A1A}
+  .btn-copy{
+    background:#FFB627;color:#1A1A1A;box-shadow:3px 3px 0 #1A1A1A;
+  }
+  .btn-copy:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #1A1A1A}
+
+  /* 海报生成中 loading */
+  .poster-loading{
+    display:none;position:fixed;inset:0;z-index:500;
+    background:rgba(255,248,231,.95);
+    flex-direction:column;align-items:center;justify-content:center;
+    gap:16px;
+  }
+  .poster-loading.show{display:flex}
+  .loading-spinner{
+    width:48px;height:48px;border:5px solid #FFB627;
+    border-top-color:#FF4D4D;border-radius:50%;
+    animation:spin .6s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-text{font-size:16px;font-weight:900;color:#1A1A1A}
 </style>
 </head>
 <body>
@@ -294,10 +352,31 @@
   </div>
 
   <div class="btn-group">
-    <button class="btn btn-share" onclick="share()">📲 晒出我的鹅圈段位</button>
+    <button class="btn btn-share" onclick="generatePoster()">🖼️ 生成分享海报</button>
     <div class="btn-row">
       <button class="btn btn-replay" onclick="replay()">🔁 再杀一把</button>
       <button class="btn btn-home" onclick="home()">🏠 返回首页</button>
+    </div>
+  </div>
+
+  <!-- 海报生成中 -->
+  <div class="poster-loading" id="posterLoading">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">正在生成你的专属海报...</div>
+  </div>
+
+  <!-- 海报预览弹窗 -->
+  <div class="poster-overlay" id="posterOverlay" onclick="closePoster(event)">
+    <div class="poster-wrap" id="posterWrap">
+      <button class="poster-close" onclick="closePosterDirect()" title="关闭">✕</button>
+      <canvas class="poster-canvas" id="posterCanvas" width="720" height="1080"></canvas>
+    </div>
+    <div style="text-align:center">
+      <div class="poster-tip">👆 长按图片保存，发朋友圈秀一波！</div>
+      <div class="poster-actions">
+        <button class="btn-dl" onclick="downloadPoster()">💾 保存图片</button>
+        <button class="btn-copy" onclick="copyPosterLink()">🔗 复制链接</button>
+      </div>
     </div>
   </div>
 </div>
@@ -319,31 +398,36 @@
       emoji:"👑", title:"鹅腿杀神",
       desc:"5/5 全对！鹅圈的传说就是你，建议立刻去鹅腿阿姨摊位前接受加冕。",
       ratio:"120%", beat:"99%", short:"王者",
-      quote:"\"鹅腿在手，天下我有。今晚的食堂，瞬间不香了。\""
+      quote:"\"鹅腿在手，天下我有。今晚的食堂，瞬间不香了。\"",
+      color:"#FFD700", bgGrad:["#1A1A2E","#16213E"]
     };
     if(s>=80) return {
       emoji:"🔥", title:"鹅圈红人",
       desc:"含鹅量爆表，朋友圈晒鹅腿绝对没人能盖你的风头。",
       ratio:"95%", beat:"88%", short:"星耀",
-      quote:"\"少壮不努力，长大没鹅吃。还好你年轻有为。\""
+      quote:"\"少壮不努力，长大没鹅吃。还好你年轻有为。\"",
+      color:"#FF6B35", bgGrad:["#2D1B00","#4A2800"]
     };
     if(s>=60) return {
       emoji:"😎", title:"鹅道有缘人",
       desc:"勉强算个鹅圈中产，再多排几次队你就能晋级了。",
       ratio:"68%", beat:"65%", short:"钻石",
-      quote:"\"今天的鹅腿，明天的我。继续修行吧。\""
+      quote:"\"今天的鹅腿，明天的我。继续修行吧。\"",
+      color:"#7CB518", bgGrad:["#0A2000","#144400"]
     };
     if(s>=40) return {
       emoji:"🤔", title:"鹅圈萌新",
       desc:"刚入鹅道，建议先去蹲三天点，背熟阿姨的出摊时刻表。",
       ratio:"42%", beat:"38%", short:"黄金",
-      quote:"\"路漫漫其修远兮，吾将上下而抢鹅。\""
+      quote:"\"路漫漫其修远兮，吾将上下而抢鹅。\"",
+      color:"#FFB627", bgGrad:["#2B1E00","#453000"]
     };
     return {
       emoji:"😅", title:"鹅腿门外汉",
       desc:"你是不是连鹅腿阿姨长什么样都不知道？速去补课。",
       ratio:"15%", beat:"12%", short:"青铜",
-      quote:"\"鹅腿一根千金难买，今天的你输得明明白白。\""
+      quote:"\"鹅腿一根千金难买，今天的你输得明明白白。\"",
+      color:"#999", bgGrad:["#222","#333"]
     };
   }
 
@@ -359,13 +443,13 @@
   document.getElementById('wrongCnt').textContent = wrong;
   document.getElementById('quoteText').textContent = r.quote;
 
-  // 撒花 (满分专属)
+  // 撒花 (高分专属)
   if(score>=80){
     const colors = ['#FFB627','#FF4D4D','#7CB518','#1A1A1A'];
     for(let i=0;i<40;i++){
       setTimeout(()=>{
         const c = document.createElement('div');
-        c.className = 'confetti';
+        c.className='confetti';
         c.style.left = Math.random()*100 + 'vw';
         c.style.background = colors[Math.floor(Math.random()*colors.length)];
         c.style.animationDuration = (2 + Math.random()*2) + 's';
@@ -376,9 +460,265 @@
     }
   }
 
-  function share(){
-    alert("📲 截图保存，发到朋友圈秀一波！\n\n#我的鹅圈段位# " + r.title + " · " + score + "分");
+  // ====== 分享海报生成（纯 Canvas 绘制）======
+  function generatePoster(){
+    const loading = document.getElementById('posterLoading');
+    loading.classList.add('show');
+
+    // 用 requestAnimationFrame 确保 loading 显示后再绘制
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        drawPoster();
+        loading.classList.remove('show');
+        document.getElementById('posterOverlay').classList.add('show');
+      });
+    });
   }
+
+  function drawPoster(){
+    const cv = document.getElementById('posterCanvas');
+    const ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+
+    // ---- 背景渐变 ----
+    const bgGrad = ctx.createLinearGradient(0,0,W,H);
+    bgGrad.addColorStop(0, r.bgGrad[0]);
+    bgGrad.addColorStop(1, r.bgGrad[1]);
+    ctx.fillStyle = bgGrad;
+    roundRect(ctx,0,0,W,H,0,true,false);
+
+    // ---- 背景装饰圆 ----
+    ctx.globalAlpha = .12;
+    ctx.fillStyle = '#FFB627';
+    ctx.beginPath();ctx.arc(W*0.85,H*0.08,120,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle = '#FF4D4D';
+    ctx.beginPath();ctx.arc(W*0.1,H*0.9,100,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle = '#7CB518';
+    ctx.beginPath();ctx.arc(W*0.88,H*0.82,80,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // ---- 背景点阵装饰 ----
+    ctx.fillStyle = 'rgba(255,255,255,.06)';
+    for(let px=30;px<W;px+=50){
+      for(let py=30;py<H;py+=50){
+        ctx.beginPath();ctx.arc(px+((py/50)%2)*25,py,3,0,Math.PI*2);ctx.fill();
+      }
+    }
+
+    // ---- 顶部标签条 ----
+    const tagY = 56;
+    ctx.fillStyle = 'rgba(255,255,255,.15)';
+    roundRect(ctx,40,tagY-22,W-80,44,22,true,false);
+    ctx.fillStyle = '#FFB627';
+    ctx.font = 'bold 26px "PingFang SC", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🏆 鹅圈段位鉴定报告', W/2, tagY);
+
+    // ---- 主卡片 ----
+    const cardX = 46, cardY = 110, cardW = W-92, cardH = 520;
+    // 卡片阴影
+    ctx.fillStyle = 'rgba(0,0,0,.3)';
+    roundRect(ctx,cardX+8,cardY+8,cardW,cardH,28,true,false);
+    // 卡片主体
+    const cardGrad = ctx.createLinearGradient(cardX,cardY,cardX,cardY+cardH);
+    cardGrad.addColorStop(0, '#FFFFFF');
+    cardGrad.addColorStop(1, '#F8F3E8');
+    ctx.fillStyle = cardGrad;
+    roundRect(ctx,cardX,cardY,cardW,cardH,28,true,false);
+
+    // 卡片顶部装饰线
+    ctx.fillStyle = r.color;
+    roundRect(ctx,cardX,cardY,cardW,8,28,false,false);
+    roundRect(ctx,cardX,cardY,cardW,8,[28,0,0,0],true,false);
+
+    // ---- 段位 Emoji（大）----
+    ctx.font = '100px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(r.emoji, W/2, cardY + 90);
+
+    // ---- 段位标题 ----
+    ctx.fillStyle = '#1A1A1A';
+    ctx.font = '900 52px "PingFang SC", sans-serif';
+    ctx.fillText(r.title, W/2, cardY + 175);
+
+    // 段位标题下方描边效果
+    ctx.strokeStyle = r.color;
+    ctx.lineWidth = 2;
+    ctx.strokeText(r.title, W/2, cardY + 175);
+
+    // ---- 分数大字 ----
+    const scoreCX = W/2, scoreCY = cardY + 270;
+
+    // 分数背景圆
+    ctx.fillStyle = r.color;
+    ctx.beginPath();ctx.arc(scoreCX,scoreCY,64,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle = '#1A1A1A';
+    ctx.beginPath();ctx.arc(scoreCX,scoreCY,58,0,Math.PI*2);ctx.fill();
+    // 分数字
+    ctx.fillStyle = '#FFF';
+    ctx.font = '900 56px "PingFang SC", sans-serif';
+    ctx.fillText(score, scoreCX, scoreCY + 6);
+    // "分"
+    ctx.font = '800 22px "PingFang SC", sans-serif';
+    ctx.fillStyle = r.color;
+    ctx.fillText('分', scoreCX + 48, scoreCY - 16);
+
+    // ---- 数据行 ----
+    const dataY = cardY + 370;
+    const dataItems = [
+      {label:'含鹅量', value: r.ratio},
+      {label:'击败',   value: r.beat+' 玩家'},
+      {label:'段位',   value: r.short}
+    ];
+    const itemW = (cardW - 48) / 3;
+    dataItems.forEach((item,i)=>{
+      const ix = cardX + 24 + i * itemW + itemW/2;
+      // 小圆点
+      ctx.fillStyle = '#FF4D4D';
+      ctx.beginPath();ctx.arc(ix-36,dataY-8,6,0,Math.PI*2);ctx.fill();
+      // 标签
+      ctx.fillStyle = '#888';
+      ctx.font = '700 22px "PingFang SC", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(item.label, ix-14, dataY-8);
+      // 值
+      ctx.fillStyle = '#FF4D4D';
+      ctx.font = '900 26px "PingFang SC", sans-serif';
+      ctx.fillText(item.value, ix, dataY+26);
+    });
+
+    // ---- 名言区域 ----
+    const quoteY = cardY + 440;
+    ctx.fillStyle = '#1A1A1A';
+    roundRect(ctx,cardX+20,quoteY,cardW-40,62,14,true,false);
+    ctx.fillStyle = '#FFF8E7';
+    ctx.font = '600 21px "PingFang SC", sans-serif';
+    ctx.textAlign = 'center';
+    // 截断过长的名言
+    let qText = r.quote.replace(/"/g,'');
+    if(qText.length > 20) qText = qText.slice(0,20)+'...';
+    ctx.fillText(qText, W/2, quoteY + 35);
+
+    // ---- 底部数据三件套 ----
+    const statY = cardY + cardH + 32;
+    const statW = (cardW - 24) / 3;
+    const statData = [
+      {num: String(right), label:'答对', color:'#7CB518'},
+      {num: String(wrong), label:'答错', color:'#FF4D4D'},
+      {num: '5题', label:'总题', color:'#FFB627'}
+    ];
+    statData.forEach((st,i)=>{
+      const sx = cardX + 12 + i * (statW + 8);
+      ctx.fillStyle = st.color;
+      roundRect(ctx,sx,statY,statW,76,16,true,false);
+      ctx.fillStyle = i===1 ? '#fff' : '#1A1A1A';
+      ctx.font = '900 34px "PingFang SC", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(st.num, sx+statW/2, statY + 38);
+      ctx.font = '700 19px "PingFang SC", sans-serif';
+      ctx.fillText(st.label, sx+statW/2, statY + 63);
+    });
+
+    // ---- 底部引导区 ----
+    const footY = H - 160;
+    // 底部卡片
+    ctx.fillStyle = 'rgba(255,255,255,.1)';
+    roundRect(ctx,40,footY,W-80,120,20,true,false);
+
+    // 二维码占位区域
+    const qrSize = 86;
+    const qrX = W - 140, qrY = footY + 17;
+    ctx.fillStyle = '#fff';
+    roundRect(ctx,qrX,qrY,qrSize,qrSize,10,true,false);
+    // 二维码内图案示意
+    ctx.fillStyle = '#1A1A1A';
+    ctx.fillRect(qrX+10,qrY+10,qrSize-20,qrSize-20);
+    ctx.fillStyle = '#fff';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('GOOSE', qrX+qrSize/2, qrY+qrSize/2-4);
+    ctx.fillText('QUIZ', qrX+qrSize/2, qrY+qrSize/2+10);
+
+    // 扫码文字
+    ctx.fillStyle = 'rgba(255,255,255,.7)';
+    ctx.font = '500 18px "PingFang SC", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('扫码挑战', qrX+qrSize/2, qrY+qrSize+22);
+
+    // 左侧引导文案
+    ctx.fillStyle = '#FFF';
+    ctx.font = '900 34px "PingFang SC", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('🦢 鹅圈等你来战！', 68, footY + 42);
+    ctx.font = '700 21px "PingFang SC", sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,.75)';
+    ctx.fillText('测测你的「含鹅量」有多高', 68, footY + 78);
+
+    // ---- 最底部小字 ----
+    ctx.fillStyle = 'rgba(255,255,255,.35)';
+    ctx.font = '400 16px "PingFang SC", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('— 鹅腿研究所 出品 —', W/2, H - 28);
+  }
+
+  // 圆角矩形辅助函数
+  function roundRect(ctx,x,y,w,h,r,fill,stroke){
+    if(typeof r==='number') r=[r,r,r,r];
+    ctx.beginPath();
+    ctx.moveTo(x+r[0],y);
+    ctx.lineTo(x+w-r[1],y);
+    ctx.quadraticCurveTo(x+w,y,x+w,y+r[1]);
+    ctx.lineTo(x+w,y+h-r[2]);
+    ctx.quadraticCurveTo(x+w,y+h,x+w-r[2],y+h);
+    ctx.lineTo(x+r[3],y+h);
+    ctx.quadraticCurveTo(x,y+h,x,y+h-r[3]);
+    ctx.lineTo(x,y+r[0]);
+    ctx.quadraticCurveTo(x,y,x+r[0],y);
+    ctx.closePath();
+    if(fill) ctx.fill();
+    if(stroke) ctx.stroke();
+  }
+
+  // 关闭海报
+  function closePoster(e){
+    if(e.target.id==='posterOverlay'){
+      document.getElementById('posterOverlay').classList.remove('show');
+    }
+  }
+  function closePosterDirect(){
+    document.getElementById('posterOverlay').classList.remove('show');
+  }
+
+  // 下载海报
+  function downloadPoster(){
+    const cv = document.getElementById('posterCanvas');
+    const link = document.createElement('a');
+    link.download = '鹅圈段位_'+r.title+'_'+score+'.png';
+    link.href = cv.toDataURL('image/png',1.0);
+    link.click();
+  }
+
+  // 复制链接
+  function copyPosterLink(){
+    const url = location.href;
+    if(navigator.clipboard){
+      navigator.clipboard.writeText(url).then(()=>{
+        alert('✅ 链接已复制！快发给好友来挑战吧！');
+      }).catch(()=>fallbackCopy(url));
+    } else {
+      fallbackCopy(url);
+    }
+  }
+  function fallbackCopy(text){
+    const ta=document.createElement('textarea');ta.value=text;
+    ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');alert('✅ 链接已复制！')}catch(e){alert('链接：\n'+text)}
+    document.body.removeChild(ta);
+  }
+
   function replay(){
     try{localStorage.removeItem('goose_score')}catch(e){}
     location.href='quiz.html';
