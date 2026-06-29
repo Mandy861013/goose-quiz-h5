@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFF8E7"/>
+      <stop offset="100%" style="stop-color#FFE4B5"/>
+    </linearGradient>
+  </defs>
+  <!-- 背景 -->
+  <rect width="1200" height="630" fill="#FFF8E7"/>
+  <!-- 装饰圆 -->
+  <circle cx="1050" cy="80" r="140" fill="#FFB627" opacity=".15"/>
+  <circle cx="150" cy="550" r="120" fill="#FF4D4D" opacity=".12"/>
+  <circle cx="1100" cy="500" r="90" fill="#7CB518" opacity=".1"/>
+  <!-- 点阵装饰 -->
+  <g fill="#1A1A1A" opacity=".06">
+    <circle cx="60" cy="60" r="6"/><circle cx="120" cy="60" r="6"/><circle cx="180" cy="60" r="6"/>
+    <circle cx="60" cy="120" r="6"/><circle cx="120" cy="120" r="6"/><circle cx="180" cy="120" r="6"/>
+    <circle cx="1020" cy="520" r="6"/><circle cx="1080" cy="520" r="6"/><circle cx="1140" cy="520" r="6"/>
+    <circle cx="1020" cy="580" r="6"/><circle cx="1080" cy="580" r="6"/><circle cx="1140" cy="580" r="6"/>
+  </g>
+  <!-- 主卡片 -->
+  <rect x="160" y="80" width="880" height="470" rx="32" fill="#fff" stroke="#1A1A1A" stroke-width="6"/>
+  <rect x="160" y="80" width="880" height="14" rx="32" fill="#FF4D4D"/>
+  <!-- 标题区域 -->
+  <text x="600" y="210" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="88" font-weight="900" fill="#1A1A1A">🦢 鹅腿杀</text>
+  <text x="600" y="290" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="42" font-weight="800" fill="#555">你够格当鹅圈一哥吗？</text>
+  <!-- 分数圆 -->
+  <circle cx="600" cy="400" r="70" fill="#FFB627" stroke="#1A1A1A" stroke-width="5"/>
+  <circle cx="600" cy="400" r="58" fill="#1A1A1A"/>
+  <text x="600" y="420" text-anchor="middle" font-family="'PingFang SC',sans-serif" font-size="52" font-weight="900" fill="#FFF8E7">?</text>
+  <!-- 底部标签组 -->
+  <g transform="translate(280,510)">
+    <rect x="0" y="0" width="180" height="50" rx="25" fill="#7CB518"/>
+    <text x="90" y="33" text-anchor="middle" font-family="'PingFang SC',sans-serif" font-size="22" font-weight="900" fill="#fff">10 道题库</text>
+  </g>
+  <g transform="translate(510,510)">
+    <rect x="0" y="0" width="180" height="50" rx="25" fill="#FF4D4D"/>
+    <text x="90" y="33" text-anchor="middle" font-family="'PingFang SC',sans-serif" font-size="22" font-weight="900" fill="#fff">随机挑战</text>
+  </g>
+  <g transform="translate(740,510)">
+    <rect x="0" y="0" width="180" height="50" rx="25" fill="#FFB627"/>
+    <text x="90" y="33" text-anchor="middle" font-family="'PingFang SC',sans-serif" font-size="22" font-weight="900" fill="#1A1A1A">测含鹅量</text>
+  </g>
+  <!-- 装饰emoji -->
+  <text x="130" y="170" font-size="64" transform="rotate(-15,130,170)">🍗</text>
+  <text x="1070" y="200" font-size="56" transform="rotate(20,1070,200)">🔥</text>
+  <text x="1080" y="400" font-size="48" transform="rotate(-10,1080,400)">⭐</text>
+  <text x="120" y="380" font-size="44" transform="rotate(12,120,380)">💸</text>
+</svg>
