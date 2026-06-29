@@ -250,7 +250,7 @@
     <button class="back-btn" onclick="goBack()">←</button>
     <div class="progress-wrap">
       <div class="progress-text">
-        <span><span class="now" id="curNo">1</span> / 5 题</span>
+        <span><span class="now" id="curNo">1</span> / <span id="totalQ">5</span> 题</span>
         <span id="scoreText">0 分</span>
       </div>
       <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
@@ -273,38 +273,87 @@
 <div class="feedback" id="feedback">答对啦 🎉</div>
 
 <script>
-  const QUESTIONS = [
+  // ====== 完整题库（10 道）======
+  const QUESTION_BANK = [
     {
-      tag:"第 1 题 · 鹅圈入门",
+      tag:"鹅圈入门",
       q:"鹅腿阿姨最早是在哪所高校爆火出圈的？",
       opts:["北京大学","清华大学","中国人民大学","北京航空航天大学"],
       ans:2
     },
     {
-      tag:"第 2 题 · 行业黑话",
+      tag:"行业黑话",
       q:"在鹅圈，「含鹅量」指的是？",
       opts:["你吃过的鹅腿数量","你抢鹅腿的成功率","你被鹅腿支配的程度","你和鹅腿阿姨的微信好友数"],
       ans:2
     },
     {
-      tag:"第 3 题 · 实战操作",
+      tag:"实战操作",
       q:"抢到鹅腿之后最骚的操作是？",
       opts:["立刻发朋友圈炫耀","加价 50% 转手给舍友","小心翼翼独自含泪吃完","组局开「鹅腿品鉴会」"],
       ans:3
     },
     {
-      tag:"第 4 题 · 灵魂拷问",
+      tag:"灵魂拷问",
       q:"没抢到鹅腿，正确的反应是？",
       opts:["破防大哭","怒发冲冠骂三天","坦然接受去吃食堂","去隔壁学校蹲点"],
       ans:3
     },
     {
-      tag:"第 5 题 · 终极封神",
+      tag:"终极封神",
       q:"鹅圈一哥的精神图腾是？",
       opts:["金黄油亮的脆皮","深夜排队的人潮","阿姨的招牌微笑","以上全都是 + 一根孜然"],
       ans:3
+    },
+    // ====== 新增 5 题 ======
+    {
+      tag:"历史考据",
+      q:"鹅腿阿姨的摊位通常在什么时间段出没？",
+      opts:["早上 6-8 点","中午 11-13 点","晚上 21-23 点","凌晨 0-2 点"],
+      ans:2
+    },
+    {
+      tag:"经济学",
+      q:"一根鹅腿的原价大约是多少？",
+      opts:["5 元","10 元","15 元","25 元"],
+      ans:2
+    },
+    {
+      tag:"心理学",
+      q:"为什么大学生对鹅腿如此疯狂？",
+      opts:["因为鹅腿真的很好吃","因为食堂太难吃了","因为稀缺 + 社交属性 + 解压三合一","因为跟风从众心理"],
+      ans:2
+    },
+    {
+      tag:"战术分析",
+      q:"抢鹅腿的最佳策略是？",
+      opts:["拼手速第一个冲上去","提前半小时排队蹲守","和阿姨搞好关系走后门","假装路过然后突然出手"],
+      ans:1
+    },
+    {
+      tag:"哲学思辨",
+      q:"如果全世界只剩最后一根鹅腿，你会？",
+      opts:["自己独吞","让给最好的朋友","拍卖换钱平分","和喜欢的人一人一半"],
+      ans:3
     }
   ];
+
+  // 每次随机抽取 N 道题（Fisher-Yates 洗牌算法）
+  const QUIZ_COUNT = 5;
+  function pickQuestions(bank, count){
+    const arr = bank.slice();
+    for(let i=arr.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [arr[i],arr[j]] = [arr[j],arr[i]];
+    }
+    return arr.slice(0,count).map((item,idx)=>({
+      ...item,
+      tag:"第 "+(idx+1)+" 题 · "+item.tag
+    }));
+  }
+
+  // 本次答题题目列表（每次加载随机生成）
+  let QUESTIONS = [];
 
   let idx = 0;
   let score = 0;
@@ -312,6 +361,21 @@
   let timerId = null;
   let timeLeft = 60;
   const PER_SCORE = 20;
+
+  // ====== 初始化：随机抽题 ======
+  (function initQuiz(){
+    // 尝试恢复上次的题目（刷新不丢进度）
+    try{
+      const saved = localStorage.getItem('goose_questions');
+      if(saved){
+        QUESTIONS = JSON.parse(saved);
+      }
+    }catch(e){}
+    if(!QUESTIONS || QUESTIONS.length===0){
+      QUESTIONS = pickQuestions(QUESTION_BANK, QUIZ_COUNT);
+      try{localStorage.setItem('goose_questions',JSON.stringify(QUESTIONS))}catch(e){}
+    }
+  })();
 
   function goBack(){
     if(confirm("退出后进度会清空，确定吗？")){
@@ -323,6 +387,7 @@
   function render(){
     const q = QUESTIONS[idx];
     document.getElementById('curNo').textContent = idx+1;
+    document.getElementById('totalQ').textContent = QUESTIONS.length;
     document.getElementById('qTag').textContent = q.tag;
     document.getElementById('qText').textContent = q.q;
     document.getElementById('scoreText').textContent = score + ' 分';
