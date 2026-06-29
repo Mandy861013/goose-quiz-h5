@@ -700,15 +700,15 @@
     link.click();
   }
 
-  // 复制链接
+  // 复制链接（统一通过 share.html 分享入口）
   function copyPosterLink(){
-    const url = location.href;
+    const baseUrl = location.href.replace(/\/result\.html.*$/, '/share.html');
     if(navigator.clipboard){
-      navigator.clipboard.writeText(url).then(()=>{
+      navigator.clipboard.writeText(baseUrl).then(()=>{
         alert('✅ 链接已复制！快发给好友来挑战吧！');
-      }).catch(()=>fallbackCopy(url));
+      }).catch(()=>fallbackCopy(baseUrl));
     } else {
-      fallbackCopy(url);
+      fallbackCopy(baseUrl);
     }
   }
   function fallbackCopy(text){
